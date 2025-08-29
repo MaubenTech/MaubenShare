@@ -20,44 +20,90 @@ export default function UploadPage() {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
+		console.log("[v0] UploadPage component mounted");
+		console.log("[v0] Session ID:", sessionId);
+
 		// Check if current date is before August 30th, 2025
-		const cutoffDate = new Date("2025-08-31");
+		const cutoffDate = new Date("2025-08-30");
 		const currentDate = new Date();
-		setIsActive(currentDate < cutoffDate);
-	}, []);
+		const isActiveStatus = currentDate < cutoffDate;
+		console.log("[v0] Current date:", currentDate.toISOString());
+		console.log("[v0] Cutoff date:", cutoffDate.toISOString());
+		console.log("[v0] Upload active status:", isActiveStatus);
+
+		setIsActive(isActiveStatus);
+	}, [sessionId]);
 
 	const handleFileSelect = useCallback(
 		async (file: File) => {
+			console.log("[v0] handleFileSelect called");
+			console.log("[v0] File details:", {
+				name: file.name,
+				size: file.size,
+				type: file.type,
+				lastModified: file.lastModified,
+			});
+			console.log("[v0] Is active:", isActive);
+			console.log("[v0] Session ID:", sessionId);
+
 			if (!isActive) {
+				console.log("[v0] Upload blocked - not active");
 				setUploadStatus("error");
 				return;
 			}
 
+			console.log("[v0] Starting upload process");
 			setIsUploading(true);
 			setUploadStatus("idle");
 
 			try {
+				console.log("[v0] Creating FormData");
 				const formData = new FormData();
 				formData.append("file", file);
 				formData.append("sessionId", sessionId);
+
+				console.log("[v0] FormData created, making fetch request to /api/upload");
+				console.log("[v0] Request details:", {
+					method: "POST",
+					url: "/api/upload",
+					hasFile: formData.has("file"),
+					hasSessionId: formData.has("sessionId"),
+				});
 
 				const response = await fetch("/api/upload", {
 					method: "POST",
 					body: formData,
 				});
 
+				console.log("[v0] Fetch response received");
+				console.log("[v0] Response status:", response.status);
+				console.log("[v0] Response ok:", response.ok);
+				console.log("[v0] Response headers:", Object.fromEntries(response.headers.entries()));
+
 				if (response.ok) {
+					console.log("[v0] Upload successful");
+					const responseData = await response.text();
+					console.log("[v0] Response data:", responseData);
+
 					setUploadStatus("success");
 					// Create preview of uploaded image
 					const imageUrl = URL.createObjectURL(file);
 					setCapturedImage(imageUrl);
 				} else {
+					console.log("[v0] Upload failed - response not ok");
+					const errorText = await response.text();
+					console.log("[v0] Error response:", errorText);
 					setUploadStatus("error");
 				}
 			} catch (error) {
-				console.error("Upload failed:", error);
+				console.error("[v0] Upload failed with exception:", error);
+				console.log("[v0] Error details:", {
+					message: error instanceof Error ? error.message : "Unknown error",
+					stack: error instanceof Error ? error.stack : "No stack trace",
+				});
 				setUploadStatus("error");
 			} finally {
+				console.log("[v0] Upload process completed, setting isUploading to false");
 				setIsUploading(false);
 			}
 		},
@@ -65,17 +111,34 @@ export default function UploadPage() {
 	);
 
 	const handleCameraCapture = () => {
+		console.log("[v0] handleCameraCapture called");
+		console.log("[v0] File input ref:", fileInputRef.current);
 		fileInputRef.current?.click();
 	};
 
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		console.log("[v0] handleFileChange called");
 		const file = event.target.files?.[0];
+		console.log(
+			"[v0] Selected file:",
+			file
+				? {
+						name: file.name,
+						size: file.size,
+						type: file.type,
+				  }
+				: "No file selected"
+		);
+
 		if (file) {
 			handleFileSelect(file);
+		} else {
+			console.log("[v0] No file selected from input");
 		}
 	};
 
 	const handleUploadAnother = () => {
+		console.log("[v0] handleUploadAnother called");
 		setUploadStatus("idle");
 		setCapturedImage(null);
 		if (fileInputRef.current) {
@@ -84,6 +147,7 @@ export default function UploadPage() {
 	};
 
 	if (!isActive) {
+		console.log("[v0] Rendering inactive state - upload period ended");
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
 				<Card className="max-w-md w-full">
@@ -103,6 +167,7 @@ export default function UploadPage() {
 		);
 	}
 
+	console.log("[v0] Rendering active upload interface");
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
 			<div className="container mx-auto px-4 py-8">
