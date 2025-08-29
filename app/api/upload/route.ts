@@ -1,42 +1,86 @@
-import { put } from "@vercel/blob"
-import { type NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server";
+import { getDatabase, getPhotoBucket } from "@/lib/mongodb";
+import { PHOTOS_COLLECTION, type PhotoDocument } from "@/lib/models/Photo";
+import type { ObjectId } from "mongodb";
 
 export async function POST(request: NextRequest) {
-  try {
-    const formData = await request.formData()
-    const file = formData.get("file") as File
-    const sessionId = formData.get("sessionId") as string
+	try {
+		const formData = await request.formData();
+		const file = formData.get("file") as File;
+		const sessionId = formData.get("sessionId") as string;
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 })
-    }
+		if (!file) {
+			return NextResponse.json({ error: "No file provided" }, { status: 400 });
+		}
 
-    // Check if current date is before August 30th, 2025
-    const cutoffDate = new Date("2025-08-30")
-    const currentDate = new Date()
+		// Check if current date is before August 30th, 2025
+		const cutoffDate = new Date("2025-08-30");
+		const currentDate = new Date();
 
-    if (currentDate >= cutoffDate) {
-      return NextResponse.json({ error: "Upload period has ended" }, { status: 403 })
-    }
+		if (currentDate >= cutoffDate) {
+			return NextResponse.json({ error: "Upload period has ended" }, { status: 403 });
+		}
 
-    // Create filename with session ID and timestamp
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
-    const filename = `${sessionId}/${timestamp}-${file.name}`
+		const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+		const filename = `${sessionId}/${timestamp}-${file.name}`;
 
-    // Upload to Vercel Blob
-    const blob = await put(filename, file, {
-      access: "public",
-    })
+		// Get GridFS bucket and database
+		const photoBucket = await getPhotoBucket();
+		const db = await getDatabase();
 
-    return NextResponse.json({
-      url: blob.url,
-      filename: file.name,
-      size: file.size,
-      type: file.type,
-      sessionId,
-    })
-  } catch (error) {
-    console.error("Upload error:", error)
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 })
-  }
+		// Convert file to buffer
+		const buffer = Buffer.from(await file.arrayBuffer());
+
+		// Upload to GridFS
+		const uploadStream = photoBucket.openUploadStream(filename, {
+			metadata: {
+				originalName: file.name,
+				mimeType: file.type,
+				sessionId: sessionId,
+				uploadedAt: new Date(),
+				uploadedBy: request.headers.get("x-forwarded-for") || "unknown",
+				deviceInfo: request.headers.get("user-agent") || undefined,
+			},
+		});
+
+		// Create a promise to handle the upload
+		const fileId = await new Promise<ObjectId>((resolve, reject) => {
+			uploadStream.on("finish", () => {
+				resolve(uploadStream.id as ObjectId);
+			});
+			uploadStream.on("error", reject);
+			uploadStream.end(buffer);
+		});
+
+		// Save photo metadata to photos collection
+		const photoDoc: PhotoDocument = {
+			fileId: fileId,
+			filename: filename,
+			originalName: file.name,
+			mimeType: file.type,
+			size: file.size,
+			sessionId: sessionId,
+			uploadedAt: new Date(),
+			uploadedBy: request.headers.get("x-forwarded-for") || "unknown",
+			metadata: {
+				deviceInfo: request.headers.get("user-agent") || undefined,
+			},
+			tags: [],
+			isDeleted: false,
+		};
+
+		const result = await db.collection(PHOTOS_COLLECTION).insertOne(photoDoc);
+
+		return NextResponse.json({
+			id: result.insertedId.toString(),
+			url: `/api/photos/${result.insertedId}/file`,
+			filename: file.name,
+			size: file.size,
+			type: file.type,
+			sessionId,
+		});
+	} catch (error) {
+		console.error("Upload error:", error);
+		return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+	}
 }

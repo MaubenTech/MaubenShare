@@ -11,11 +11,19 @@ import WaitingAnimation from "@/components/waiting-animation";
 
 interface Photo {
 	id: string;
-	url: string;
-	uploadedAt: string;
-	size: number;
-	sessionId: string;
 	filename: string;
+	originalName: string;
+	mimeType: string;
+	size: number;
+	url: string;
+	sessionId: string;
+	uploadedAt: string;
+	metadata?: {
+		width?: number;
+		height?: number;
+		deviceInfo?: string;
+	};
+	tags?: string[];
 }
 
 export default function HomePage() {
@@ -38,7 +46,8 @@ export default function HomePage() {
 		const newSessionId = Math.random().toString(36).substring(2, 15);
 		setSessionId(newSessionId);
 
-		const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
+		const uploadUrl = `http://192.168.100.18:3000/upload/${newSessionId}`;
+		// const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
 		setQrCodeUrl(uploadUrl);
 
 		fetchPhotos();
@@ -49,10 +58,10 @@ export default function HomePage() {
 
 	const fetchPhotos = async () => {
 		try {
-			const response = await fetch("/api/photos");
+			const response = await fetch("/api/list");
 			if (response.ok) {
 				const data = await response.json();
-				setPhotos(data.photos || []);
+				setPhotos(data.files || []);
 			}
 		} catch (error) {
 			console.error("Failed to fetch photos:", error);
@@ -111,7 +120,8 @@ export default function HomePage() {
 	const generateNewSession = () => {
 		const newSessionId = Math.random().toString(36).substring(2, 15);
 		setSessionId(newSessionId);
-		const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
+		const uploadUrl = `http://192.168.100.18:3000/upload/${newSessionId}`;
+		// const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
 		setQrCodeUrl(uploadUrl);
 	};
 
@@ -200,10 +210,11 @@ export default function HomePage() {
 									key={photo.id}
 									className="photo-item aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 animate-photo-appear shadow-sm hover:shadow-lg transition-all duration-300"
 									style={{ animationDelay: `${index * 50}ms` }}
-									onClick={() => window.open(photo.url, "_blank")}>
+									onClick={() => window.open(photo.url, "_blank")}
+									title={photo.originalName}>
 									<img
 										src={photo.url || "/placeholder.svg"}
-										alt={`Shared photo ${index + 1}`}
+										alt={`${photo.originalName || `Shared photo ${index + 1}`}`}
 										className="w-full h-full object-cover hover:scale-110 transition-transform duration-500 cursor-pointer"
 										loading="lazy"
 									/>
