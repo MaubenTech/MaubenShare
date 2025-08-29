@@ -43,7 +43,7 @@ export default function HomePage() {
 		const currentDate = new Date();
 		setIsActive(currentDate < cutoffDate);
 
-		const newSessionId = Math.random().toString(36).substring(2, 15);
+		const newSessionId = "mauben-share";
 		setSessionId(newSessionId);
 
 		const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
@@ -117,7 +117,7 @@ export default function HomePage() {
 	};
 
 	const generateNewSession = () => {
-		const newSessionId = Math.random().toString(36).substring(2, 15);
+		const newSessionId = "mauben-share";
 		setSessionId(newSessionId);
 		const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
 		setQrCodeUrl(uploadUrl);
