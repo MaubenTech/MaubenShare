@@ -21,7 +21,7 @@ export default function UploadPage() {
 
 	useEffect(() => {
 		// Check if current date is before August 30th, 2025
-		const cutoffDate = new Date("2025-08-30");
+		const cutoffDate = new Date("2025-08-31");
 		const currentDate = new Date();
 		setIsActive(currentDate < cutoffDate);
 	}, []);
