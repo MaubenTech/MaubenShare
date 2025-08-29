@@ -46,8 +46,8 @@ export default function HomePage() {
 		const newSessionId = Math.random().toString(36).substring(2, 15);
 		setSessionId(newSessionId);
 
-		const uploadUrl = `http://192.168.100.18:3000/upload/${newSessionId}`;
-		// const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
+		// const uploadUrl = `http://192.168.100.18:3000/upload/${newSessionId}`;
+		const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
 		setQrCodeUrl(uploadUrl);
 
 		fetchPhotos();
@@ -120,8 +120,8 @@ export default function HomePage() {
 	const generateNewSession = () => {
 		const newSessionId = Math.random().toString(36).substring(2, 15);
 		setSessionId(newSessionId);
-		const uploadUrl = `http://192.168.100.18:3000/upload/${newSessionId}`;
-		// const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
+		// const uploadUrl = `http://192.168.100.18:3000/upload/${newSessionId}`;
+		const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
 		setQrCodeUrl(uploadUrl);
 	};
 
