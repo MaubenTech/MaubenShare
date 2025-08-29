@@ -198,7 +198,7 @@ export default function UploadPage() {
 						<Camera className="h-8 w-8 text-blue-600" />
 						<h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Upload Photos</h1>
 					</div>
-					<p className="text-muted-foreground">Session: {sessionId}</p>
+					{/* <p className="text-muted-foreground">Session: {sessionId}</p> */}
 				</div>
 
 				{/* Upload Interface */}
