@@ -5,7 +5,8 @@ import { PHOTOS_COLLECTION, type PhotoDocument } from "@/lib/models/Photo";
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
 	try {
-		const photoId = params.id;
+		const { id } = params;
+		const photoId = id;
 		const db = await getDatabase();
 		const photoBucket = await getPhotoBucket();
 

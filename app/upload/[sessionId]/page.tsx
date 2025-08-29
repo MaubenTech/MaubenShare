@@ -5,7 +5,7 @@ import type React from "react";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Camera, CheckCircle, AlertCircle, ArrowLeft, Plus } from "lucide-react";
+import { Camera, CheckCircle, AlertCircle, ArrowLeft, Plus, ImageIcon } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 
 export default function UploadPage() {
@@ -17,13 +17,14 @@ export default function UploadPage() {
 	const [uploadStatus, setUploadStatus] = useState<"idle" | "success" | "error">("idle");
 	const [isActive, setIsActive] = useState(true);
 	const [capturedImage, setCapturedImage] = useState<string | null>(null);
+	const [showOptions, setShowOptions] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const galleryInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		console.log("[v0] UploadPage component mounted");
 		console.log("[v0] Session ID:", sessionId);
 
-		// Check if current date is before August 30th, 2025
 		const cutoffDate = new Date("2025-08-30");
 		const currentDate = new Date();
 		const isActiveStatus = currentDate < cutoffDate;
@@ -55,6 +56,7 @@ export default function UploadPage() {
 			console.log("[v0] Starting upload process");
 			setIsUploading(true);
 			setUploadStatus("idle");
+			setShowOptions(false);
 
 			try {
 				console.log("[v0] Creating FormData");
@@ -86,7 +88,6 @@ export default function UploadPage() {
 					console.log("[v0] Response data:", responseData);
 
 					setUploadStatus("success");
-					// Create preview of uploaded image
 					const imageUrl = URL.createObjectURL(file);
 					setCapturedImage(imageUrl);
 				} else {
@@ -110,10 +111,21 @@ export default function UploadPage() {
 		[sessionId, isActive]
 	);
 
+	const handleTakePhoto = () => {
+		console.log("[v0] handleTakePhoto called");
+		setShowOptions(true);
+	};
+
 	const handleCameraCapture = () => {
 		console.log("[v0] handleCameraCapture called");
 		console.log("[v0] File input ref:", fileInputRef.current);
 		fileInputRef.current?.click();
+	};
+
+	const handleGallerySelect = () => {
+		console.log("[v0] handleGallerySelect called");
+		console.log("[v0] Gallery input ref:", galleryInputRef.current);
+		galleryInputRef.current?.click();
 	};
 
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,8 +153,12 @@ export default function UploadPage() {
 		console.log("[v0] handleUploadAnother called");
 		setUploadStatus("idle");
 		setCapturedImage(null);
+		setShowOptions(false);
 		if (fileInputRef.current) {
 			fileInputRef.current.value = "";
+		}
+		if (galleryInputRef.current) {
+			galleryInputRef.current.value = "";
 		}
 	};
 
@@ -194,10 +210,33 @@ export default function UploadPage() {
 						</CardHeader>
 						<CardContent className="space-y-6">
 							{uploadStatus !== "success" ? (
-								<Button onClick={handleCameraCapture} disabled={isUploading} size="lg" className="w-full h-16 text-lg animate-pulse-subtle">
-									<Camera className="h-6 w-6 mr-3" />
-									{isUploading ? "Uploading..." : "Take Photo"}
-								</Button>
+								<div className="space-y-4">
+									{!showOptions ? (
+										<Button onClick={handleTakePhoto} disabled={isUploading} size="lg" className="w-full h-16 text-lg animate-pulse-subtle">
+											<Camera className="h-6 w-6 mr-3" />
+											{isUploading ? "Uploading..." : "Take Photo"}
+										</Button>
+									) : (
+										<div className="space-y-3 animate-fade-in">
+											<Button onClick={handleCameraCapture} disabled={isUploading} size="lg" className="w-full h-14 text-lg">
+												<Camera className="h-5 w-5 mr-3" />
+												Take with Camera
+											</Button>
+											<Button
+												onClick={handleGallerySelect}
+												disabled={isUploading}
+												size="lg"
+												variant="outline"
+												className="w-full h-14 text-lg bg-transparent">
+												<ImageIcon className="h-5 w-5 mr-3" />
+												Choose from Gallery
+											</Button>
+											<Button onClick={() => setShowOptions(false)} variant="ghost" size="sm" className="w-full">
+												Cancel
+											</Button>
+										</div>
+									)}
+								</div>
 							) : (
 								<div className="space-y-3">
 									<Button onClick={handleUploadAnother} size="lg" className="w-full h-16 text-lg" variant="default">
@@ -210,8 +249,9 @@ export default function UploadPage() {
 								</div>
 							)}
 
-							{/* Hidden file input */}
+							{/* Hidden file inputs */}
 							<input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />
+							<input ref={galleryInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
 
 							{/* Status Messages */}
 							{uploadStatus === "success" && (

@@ -46,7 +46,6 @@ export default function HomePage() {
 		const newSessionId = Math.random().toString(36).substring(2, 15);
 		setSessionId(newSessionId);
 
-		// const uploadUrl = `http://192.168.100.18:3000/upload/${newSessionId}`;
 		const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
 		setQrCodeUrl(uploadUrl);
 
@@ -120,7 +119,6 @@ export default function HomePage() {
 	const generateNewSession = () => {
 		const newSessionId = Math.random().toString(36).substring(2, 15);
 		setSessionId(newSessionId);
-		// const uploadUrl = `http://192.168.100.18:3000/upload/${newSessionId}`;
 		const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
 		setQrCodeUrl(uploadUrl);
 	};
@@ -267,7 +265,7 @@ export default function HomePage() {
 								)}
 
 								<div className="text-center space-y-2">
-									<p className="text-sm text-muted-foreground">Session ID: {sessionId}</p>
+									{/* <p className="text-sm text-muted-foreground">Session ID: {sessionId}</p> */}
 									<Button onClick={generateNewSession} variant="outline" disabled={!isActive} className="animate-fade-in bg-transparent">
 										Generate New QR Code
 									</Button>
