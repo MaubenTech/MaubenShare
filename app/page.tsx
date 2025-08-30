@@ -47,7 +47,7 @@ export default function HomePage() {
 		setSessionId(newSessionId);
 
 		// const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
-		const uploadUrl = `http://192.168.100.18:3000/upload/${newSessionId}`;
+		const uploadUrl = `https://share.maubentech.com/upload/${newSessionId}`;
 		setQrCodeUrl(uploadUrl);
 
 		fetchPhotos();
@@ -120,7 +120,7 @@ export default function HomePage() {
 	const generateNewSession = () => {
 		const newSessionId = "mauben-share";
 		setSessionId(newSessionId);
-		const uploadUrl = `http://192.168.100.18:3000/upload/${newSessionId}`;
+		const uploadUrl = `https://share.maubentech.com/upload/${newSessionId}`;
 		// const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
 		setQrCodeUrl(uploadUrl);
 	};
