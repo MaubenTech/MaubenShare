@@ -25,7 +25,7 @@ export default function UploadPage() {
 		console.log("[v0] UploadPage component mounted");
 		console.log("[v0] Session ID:", sessionId);
 
-		const cutoffDate = new Date("2025-09-31");
+		const cutoffDate = new Date("2025-09-25");
 		const currentDate = new Date();
 		const isActiveStatus = currentDate < cutoffDate;
 		console.log("[v0] Current date:", currentDate.toISOString());

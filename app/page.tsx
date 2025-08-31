@@ -39,7 +39,7 @@ export default function HomePage() {
 	const cameraInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
-		const cutoffDate = new Date("2025-09-31");
+		const cutoffDate = new Date("2025-09-25");
 		const currentDate = new Date();
 		setIsActive(currentDate < cutoffDate);
 
