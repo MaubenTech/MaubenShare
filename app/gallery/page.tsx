@@ -51,7 +51,7 @@ export default function GalleryPage() {
 		if (!file) return;
 
 		// Check if upload is still active (before August 30, 2025)
-		const cutoffDate = new Date("2025-09-30");
+		const cutoffDate = new Date("2025-09-31");
 		const currentDate = new Date();
 
 		if (currentDate > cutoffDate) {
