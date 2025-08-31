@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Check if current date is before August 30th, 2025
-		const cutoffDate = new Date("2025-08-31");
+		const cutoffDate = new Date("2025-09-31");
 		const currentDate = new Date();
 
 		console.log("[v0] Date check:", {

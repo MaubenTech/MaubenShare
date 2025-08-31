@@ -25,7 +25,7 @@ export default function UploadPage() {
 		console.log("[v0] UploadPage component mounted");
 		console.log("[v0] Session ID:", sessionId);
 
-		const cutoffDate = new Date("2025-08-31");
+		const cutoffDate = new Date("2025-09-31");
 		const currentDate = new Date();
 		const isActiveStatus = currentDate < cutoffDate;
 		console.log("[v0] Current date:", currentDate.toISOString());
@@ -170,7 +170,7 @@ export default function UploadPage() {
 					<CardHeader className="text-center">
 						<AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
 						<CardTitle className="text-red-600">Upload Period Ended</CardTitle>
-						<CardDescription>Photo uploads ended on August 30th, 2025</CardDescription>
+						{/* <CardDescription>Photo uploads ended on August 30th, 2025</CardDescription> */}
 					</CardHeader>
 					<CardContent className="text-center">
 						<Button onClick={() => router.push("/")} variant="outline">
