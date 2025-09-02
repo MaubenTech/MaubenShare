@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 	authors: [{ name: "MaubenTech" }],
 	creator: "MaubenTech",
 	publisher: "MaubenTech",
+	icons: { icon: "/favicon.ico" },
 };
 
 export default function RootLayout({
