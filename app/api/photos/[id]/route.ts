@@ -5,7 +5,7 @@ import { PHOTOS_COLLECTION, type PhotoDocument } from "@/lib/models/Photo";
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
 	try {
-		const photoId = params.id;
+		const { id: photoId } = await params;
 		const db = await getDatabase();
 		const photoBucket = await getPhotoBucket();
 
