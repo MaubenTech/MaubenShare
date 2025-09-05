@@ -25,7 +25,7 @@ export default function UploadPage() {
 		console.log("[v0] UploadPage component mounted");
 		console.log("[v0] Session ID:", sessionId);
 
-		const cutoffDate = new Date("2025-09-25");
+		const cutoffDate = new Date("2025-08-30");
 		const currentDate = new Date();
 		const isActiveStatus = currentDate < cutoffDate;
 		console.log("[v0] Current date:", currentDate.toISOString());
@@ -36,14 +36,9 @@ export default function UploadPage() {
 	}, [sessionId]);
 
 	const handleFileSelect = useCallback(
-		async (file: File) => {
+		async (files: FileList) => {
 			console.log("[v0] handleFileSelect called");
-			console.log("[v0] File details:", {
-				name: file.name,
-				size: file.size,
-				type: file.type,
-				lastModified: file.lastModified,
-			});
+			console.log("[v0] Number of files:", files.length);
 			console.log("[v0] Is active:", isActive);
 			console.log("[v0] Session ID:", sessionId);
 
@@ -53,58 +48,57 @@ export default function UploadPage() {
 				return;
 			}
 
-			console.log("[v0] Starting upload process");
+			if (files.length === 0) {
+				console.log("[v0] No files selected");
+				return;
+			}
+
+			console.log("[v0] Starting upload process for multiple files");
 			setIsUploading(true);
 			setUploadStatus("idle");
 			setShowOptions(false);
 
 			try {
-				console.log("[v0] Creating FormData");
-				const formData = new FormData();
-				formData.append("file", file);
-				formData.append("sessionId", sessionId);
+				const uploadPromises = Array.from(files).map(async (file, index) => {
+					console.log(`[v0] Uploading file ${index + 1}/${files.length}:`, {
+						name: file.name,
+						size: file.size,
+						type: file.type,
+					});
 
-				console.log("[v0] FormData created, making fetch request to /api/upload");
-				console.log("[v0] Request details:", {
-					method: "POST",
-					url: "/api/upload",
-					hasFile: formData.has("file"),
-					hasSessionId: formData.has("sessionId"),
+					const formData = new FormData();
+					formData.append("file", file);
+					formData.append("sessionId", sessionId);
+
+					const response = await fetch("/api/upload", {
+						method: "POST",
+						body: formData,
+					});
+
+					console.log(`[v0] File ${index + 1} response status:`, response.status);
+
+					if (!response.ok) {
+						const errorText = await response.text();
+						console.log(`[v0] File ${index + 1} upload failed:`, errorText);
+						throw new Error(`Upload failed for ${file.name}`);
+					}
+
+					return response.json();
 				});
 
-				const response = await fetch("/api/upload", {
-					method: "POST",
-					body: formData,
-				});
+				await Promise.all(uploadPromises);
+				console.log("[v0] All uploads successful");
+				setUploadStatus("success");
 
-				console.log("[v0] Fetch response received");
-				console.log("[v0] Response status:", response.status);
-				console.log("[v0] Response ok:", response.ok);
-				console.log("[v0] Response headers:", Object.fromEntries(response.headers.entries()));
-
-				if (response.ok) {
-					console.log("[v0] Upload successful");
-					const responseData = await response.text();
-					console.log("[v0] Response data:", responseData);
-
-					setUploadStatus("success");
-					const imageUrl = URL.createObjectURL(file);
+				if (files.length > 0) {
+					const imageUrl = URL.createObjectURL(files[0]);
 					setCapturedImage(imageUrl);
-				} else {
-					console.log("[v0] Upload failed - response not ok");
-					const errorText = await response.text();
-					console.log("[v0] Error response:", errorText);
-					setUploadStatus("error");
 				}
 			} catch (error) {
 				console.error("[v0] Upload failed with exception:", error);
-				console.log("[v0] Error details:", {
-					message: error instanceof Error ? error.message : "Unknown error",
-					stack: error instanceof Error ? error.stack : "No stack trace",
-				});
 				setUploadStatus("error");
 			} finally {
-				console.log("[v0] Upload process completed, setting isUploading to false");
+				console.log("[v0] Upload process completed");
 				setIsUploading(false);
 			}
 		},
@@ -130,22 +124,13 @@ export default function UploadPage() {
 
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		console.log("[v0] handleFileChange called");
-		const file = event.target.files?.[0];
-		console.log(
-			"[v0] Selected file:",
-			file
-				? {
-						name: file.name,
-						size: file.size,
-						type: file.type,
-				  }
-				: "No file selected"
-		);
+		const files = event.target.files;
+		console.log("[v0] Selected files count:", files?.length || 0);
 
-		if (file) {
-			handleFileSelect(file);
+		if (files && files.length > 0) {
+			handleFileSelect(files);
 		} else {
-			console.log("[v0] No file selected from input");
+			console.log("[v0] No files selected from input");
 		}
 	};
 
@@ -170,7 +155,7 @@ export default function UploadPage() {
 					<CardHeader className="text-center">
 						<AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
 						<CardTitle className="text-red-600">Upload Period Ended</CardTitle>
-						{/* <CardDescription>Photo uploads ended on August 30th, 2025</CardDescription> */}
+						<CardDescription>Photo uploads ended on August 30th, 2025</CardDescription>
 					</CardHeader>
 					<CardContent className="text-center">
 						<Button onClick={() => router.push("/")} variant="outline">
@@ -198,7 +183,7 @@ export default function UploadPage() {
 						<Camera className="h-8 w-8 text-blue-600" />
 						<h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Upload Photos</h1>
 					</div>
-					{/* <p className="text-muted-foreground">Session: {sessionId}</p> */}
+					<p className="text-muted-foreground">Session: {sessionId}</p>
 				</div>
 
 				{/* Upload Interface */}
@@ -251,13 +236,13 @@ export default function UploadPage() {
 
 							{/* Hidden file inputs */}
 							<input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />
-							<input ref={galleryInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+							<input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
 
 							{/* Status Messages */}
 							{uploadStatus === "success" && (
 								<div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-center gap-3 animate-fade-in">
 									<CheckCircle className="h-5 w-5 text-green-600" />
-									<p className="text-green-800 dark:text-green-200 font-medium">Photo uploaded successfully!</p>
+									<p className="text-green-800 dark:text-green-200 font-medium">Photos uploaded successfully!</p>
 								</div>
 							)}
 

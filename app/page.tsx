@@ -39,15 +39,14 @@ export default function HomePage() {
 	const cameraInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
-		const cutoffDate = new Date("2025-09-25");
+		const cutoffDate = new Date("2025-08-30");
 		const currentDate = new Date();
 		setIsActive(currentDate < cutoffDate);
 
 		const newSessionId = "mauben-share";
 		setSessionId(newSessionId);
 
-		// const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
-		const uploadUrl = `https://share.maubentech.com/upload/${newSessionId}`;
+		const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
 		setQrCodeUrl(uploadUrl);
 
 		fetchPhotos();
@@ -70,42 +69,46 @@ export default function HomePage() {
 		}
 	};
 
-	const handleFileUpload = async (file: File) => {
-		if (!file || !isActive) return;
+	const handleFileUpload = async (files: FileList) => {
+		if (!files || files.length === 0 || !isActive) return;
 
 		setUploading(true);
 		setUploadSuccess(false);
 
 		try {
-			const formData = new FormData();
-			formData.append("file", file);
-			formData.append("sessionId", sessionId);
+			const uploadPromises = Array.from(files).map(async (file) => {
+				const formData = new FormData();
+				formData.append("file", file);
+				formData.append("sessionId", sessionId);
 
-			const response = await fetch("/api/upload", {
-				method: "POST",
-				body: formData,
+				const response = await fetch("/api/upload", {
+					method: "POST",
+					body: formData,
+				});
+
+				if (!response.ok) {
+					const error = await response.json();
+					throw new Error(error.error || "Upload failed");
+				}
+				return response.json();
 			});
 
-			if (response.ok) {
-				setUploadSuccess(true);
-				fetchPhotos(); // Refresh photos immediately
-				setTimeout(() => setUploadSuccess(false), 3000);
-			} else {
-				const error = await response.json();
-				alert(error.error || "Upload failed");
-			}
+			await Promise.all(uploadPromises);
+			setUploadSuccess(true);
+			fetchPhotos(); // Refresh photos immediately
+			setTimeout(() => setUploadSuccess(false), 3000);
 		} catch (error) {
 			console.error("Upload error:", error);
-			alert("Upload failed. Please try again.");
+			alert("Some uploads failed. Please try again.");
 		} finally {
 			setUploading(false);
 		}
 	};
 
 	const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const file = event.target.files?.[0];
-		if (file) {
-			handleFileUpload(file);
+		const files = event.target.files;
+		if (files && files.length > 0) {
+			handleFileUpload(files);
 		}
 	};
 
@@ -120,8 +123,7 @@ export default function HomePage() {
 	const generateNewSession = () => {
 		const newSessionId = "mauben-share";
 		setSessionId(newSessionId);
-		const uploadUrl = `https://share.maubentech.com/upload/${newSessionId}`;
-		// const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
+		const uploadUrl = `${window.location.origin}/upload/${newSessionId}`;
 		setQrCodeUrl(uploadUrl);
 	};
 
@@ -149,7 +151,7 @@ export default function HomePage() {
 							<CheckCircle className="h-5 w-5 text-primary" />
 							<div>
 								<p className="font-medium text-primary">Photo uploads are active</p>
-								{/* <p className="text-sm text-primary/80">Upload deadline: August 30th, 2025</p> */}
+								<p className="text-sm text-primary/80">Upload deadline: August 30th, 2025</p>
 							</div>
 						</div>
 					) : (
@@ -184,7 +186,7 @@ export default function HomePage() {
 						</div>
 
 						{/* Hidden file inputs */}
-						<input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+						<input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileSelect} className="hidden" />
 						<input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} className="hidden" />
 					</div>
 				)}
@@ -192,7 +194,7 @@ export default function HomePage() {
 				{uploadSuccess && (
 					<div className="mb-6 bg-primary/10 border border-primary/20 rounded-lg p-4 text-center animate-fade-in">
 						<CheckCircle className="h-5 w-5 text-primary mx-auto mb-2" />
-						<p className="text-primary font-medium">Photo uploaded successfully!</p>
+						<p className="text-primary font-medium">Photos uploaded successfully!</p>
 					</div>
 				)}
 
@@ -314,7 +316,7 @@ export default function HomePage() {
 
 								<div className="mt-6 p-4 bg-accent/10 rounded-lg border border-accent/20">
 									<p className="text-sm text-accent-foreground">
-										{/* <strong>Note:</strong> Photo uploads will automatically stop after August 30th, 2025 */}
+										<strong>Note:</strong> Photo uploads will automatically stop after August 30th, 2025
 									</p>
 								</div>
 							</CardContent>
