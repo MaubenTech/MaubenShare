@@ -39,7 +39,7 @@ export default function HomePage() {
 	const cameraInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
-		const cutoffDate = new Date("2025-08-30");
+		const cutoffDate = new Date("2026-08-30");
 		const currentDate = new Date();
 		setIsActive(currentDate < cutoffDate);
 
@@ -151,7 +151,7 @@ export default function HomePage() {
 							<CheckCircle className="h-5 w-5 text-primary" />
 							<div>
 								<p className="font-medium text-primary">Photo uploads are active</p>
-								<p className="text-sm text-primary/80">Upload deadline: August 30th, 2025</p>
+								{/* <p className="text-sm text-primary/80">Upload deadline: August 30th, 2025</p> */}
 							</div>
 						</div>
 					) : (
